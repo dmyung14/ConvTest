@@ -194,7 +194,7 @@ One issue found and resolved during verification: the first screenshots showed a
 **Completed**
 
 - `ReviewControls` (rendered in the drawer's footer slot) — the four review actions: verified, needs specialist, rejected, superseded, plus "Clear review state" for a claim already acted on. The parent keys the component by claim id so switching claims remounts it, rather than carrying a half-typed rationale across to a different claim.
-- **Graduated rationale policy.** Rejecting or superseding a claim overrides the evidence on record, so a rationale of at least 8 characters is *required* and enforced with a `role="alert"` message and `aria-invalid` on the field. Verifying or escalating follows from the evidence, so a rationale is invited but optional — an audit trail full of compulsory boilerplate is no better than an empty one. Where a reviewer does leave it blank, the audit event says so explicitly rather than inventing a reason.
+- **Graduated rationale policy.** Rejecting or superseding a claim overrides the evidence on record, so a rationale of at least 8 characters is _required_ and enforced with a `role="alert"` message and `aria-invalid` on the field. Verifying or escalating follows from the evidence, so a rationale is invited but optional — an audit trail full of compulsory boilerplate is no better than an empty one. Where a reviewer does leave it blank, the audit event says so explicitly rather than inventing a reason.
 - `AuditTrail` — every ingestion, classification and review event, newest first, each with a text actor-type label (Agent / System / Human), the actor, the action, the rationale and a UTC timestamp. Human review events are appended live and name the claim they refer to.
 - `ReviewProgress` — reviewed count, percentage meter and a breakdown across all five review states, with an explicit note that review progress is tracked separately from evidence coverage because reviewing a claim does not create evidence for it.
 - Header actions — "Decision memo" (print) and "Reset demo". Reset is disabled with an explanatory tooltip when there is nothing to discard.
@@ -202,13 +202,13 @@ One issue found and resolved during verification: the first screenshots showed a
 
 **Verification**
 
-| Command | Result |
-| --- | --- |
-| `npm test` | pass — 83 tests across 5 files (19 new) |
-| `npm run lint` | pass |
-| `npm run typecheck` | pass |
-| `npm run build` | pass |
-| Live browser workflow (16 assertions) | all pass |
+| Command                               | Result                                  |
+| ------------------------------------- | --------------------------------------- |
+| `npm test`                            | pass — 83 tests across 5 files (19 new) |
+| `npm run lint`                        | pass                                    |
+| `npm run typecheck`                   | pass                                    |
+| `npm run build`                       | pass                                    |
+| Live browser workflow (16 assertions) | all pass                                |
 
 The browser run exercised the whole loop: reset disabled at start → filter to contradictions → open a claim → escalate with a rationale → claim badge and per-claim review history update (1 → 2 entries) → audit trail grows by exactly one event → progress reads 1/14 → reset becomes enabled → a rejection with no rationale is blocked with the explanatory alert → the same rejection succeeds once a reason is given → state survives a full page reload → reset restores 0/14, the original 7 audit events and the disabled button → the reset also persists across another reload. No page errors.
 
@@ -220,3 +220,34 @@ New unit tests additionally assert that the source fixture is never mutated by a
 - Review state is per-browser, so two people reviewing the same demo do not see each other's actions. Out of scope for an overnight prototype, and called out in the README limitations.
 
 **Next milestone:** M6 — the ranked decision-critical unknowns panel and the print-friendly decision memo.
+
+---
+
+## Milestone 6 — Decision-critical unknowns and memo view ✅
+
+**Completed**
+
+- `UnknownsPanel` — the five unknowns ranked by impact (all three high-impact ones first), each showing the question, an explicit "Why it could change the decision" rationale, the specialist to route it to, and links through to the claims it would change. Ranking is by potential effect on the recommendation, not by how much was written about it.
+- `DecisionMemo` — a print-only, six-section memo: provisional recommendation, evidence position (coverage plus the weight table and review-state counts), ranked unknowns, all claims by domain with classification/confidence/review state/record count/reviewer, human review actions, and methodology + limitations.
+- Print behaviour — the interactive workspace is wrapped in `print:hidden` and the memo in `hidden print:block`, so printing produces the memo alone rather than a screenshot of an app. Verified at A4 width: the memo lays out at 688 px with `scrollWidth === innerWidth`, i.e. no horizontal clipping, and nothing is cut off.
+
+**Truthfulness safeguards in the memo**
+
+Four separate statements keep the memo from reading as a clinical prediction, and each is asserted by a test: the recommendation is "not a prediction that the asset will succeed"; "no probability of technical or regulatory success is asserted anywhere in this memo"; coverage "is not a probability of technical, clinical or regulatory success"; and the memo "does not constitute medical, regulatory or investment advice". The exact coverage formula and all four weights are printed in the methodology section, so a reader can recompute the number rather than trust it.
+
+**Bug found and fixed during verification**
+
+The first print run logged React error #418 — a hydration mismatch, because the memo computed `new Date()` during render, producing different text on the server and in the browser. Fixed with `src/state/print-timestamp.ts`: an external store whose server snapshot is empty and which refreshes on the browser's `beforeprint` event, so the memo is stamped with when it was actually printed and hydration matches. Re-verified: no page errors.
+
+**Verification**
+
+| Command | Result |
+| --- | --- |
+| `npm test` | pass — 97 tests across 6 files (14 new) |
+| `npm run lint` | pass |
+| `npm run typecheck` | pass |
+| `npm run build` | pass |
+| Live print/screen check (18 assertions) | all pass, no page errors |
+| Rendered A4 memo | legible, six sections, no clipped content or horizontal overflow |
+
+**Next milestone:** M7 — the optional public-data adapter (attempted only now that M0–M6 pass).
