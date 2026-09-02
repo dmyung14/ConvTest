@@ -50,6 +50,33 @@ Open <http://localhost:3000> and click **Open demonstration asset**.
 
 No API key, environment variable, database or network access is needed for the full demonstration. After `npm install`, everything runs offline.
 
+### Optional: enabling live source lookups
+
+The core demo needs none of this. To enable the optional ClinicalTrials.gov adapter:
+
+```bash
+cp .env.example .env.local          # PowerShell: Copy-Item .env.example .env.local
+npm run dev                          # restart if it was already running
+```
+
+Next.js loads `.env.local` automatically, so the flag applies regardless of which terminal starts the server. `.env.local` is gitignored. There is no API key — the endpoint is public.
+
+Check it with `http://localhost:3000/api/sources?term=spinal%20muscular%20atrophy`.
+
+### Capturing a live source snapshot
+
+With live sources enabled and the dev server running:
+
+```bash
+npm run capture:snapshot -- "spinal muscular atrophy"
+```
+
+This goes through the real `/api/sources` route, so a successful capture proves the whole chain against the live API: request → upstream schema validation → normalization → domain re-validation. It writes the normalized records to `src/sources/snapshots/<slug>.json`.
+
+Once a snapshot is committed, `/api/sources` replays it whenever the live lookup is unavailable, so the retrieval path stays demonstrable offline. Snapshots are **generated only** — never hand-written or edited, because a snapshot is the record that a retrieval actually happened. A record marked as verified must carry the `retrievedAt` stamp proving when it was fetched, and loading re-validates every record against the domain schema.
+
+If the capture fails, the script names the reason and what to do about it. `invalid_response` is a real finding worth reporting: it means the live payload no longer matches the adapter's schema.
+
 ### Test and build commands
 
 ```bash
@@ -62,6 +89,8 @@ npm run format        # Prettier write
 npm run format:check  # Prettier check
 npm run verify        # format:check → lint → typecheck → test → build
 ```
+
+`npm test` currently reports 116 tests.
 
 `npm run test:e2e` builds the app and starts a server on port 3100 itself. If Playwright's own browser download is unavailable, the config falls back to a Chromium already present under `PLAYWRIGHT_BROWSERS_PATH`, or to `CHROMIUM_PATH` if you set it explicitly.
 
@@ -89,6 +118,8 @@ src/
   sources/
     types.ts                    SourceAdapter interface
     clinicaltrials.ts           ClinicalTrials.gov API v2 adapter
+    snapshot.ts                 capture/replay of normalized responses
+    snapshots/                  committed snapshots (generated only)
   components/
     ui/                         Badge, Card, Button, Drawer, Meter, EmptyState
     layout/                     app shell, disclaimers, illustrative banner
@@ -152,7 +183,7 @@ Coverage measures how much of the claim set is backed by inspectable evidence. *
 ## Limitations
 
 - **The default asset is synthetic.** `DTX-101 (illustrative)` is not a real programme. Its sources are records in a demonstration corpus: no PubMed IDs, DOIs, trial registrations, real institutions or quotations, enforced by a test that scans the serialized fixture. Illustrative records carry a badge and no link, so they cannot be mistaken for citations.
-- **No live source snapshot is bundled.** The `SourceAdapter` interface and a ClinicalTrials.gov API v2 adapter are implemented and unit-tested against both success and every failure mode, but the build environment blocks all non-registry egress, so no real response could be retrieved — and one was not fabricated. Run with `DECISIONTRACE_ENABLE_LIVE_SOURCES=true` on a machine with internet access to exercise it: `GET /api/sources?term=<condition>`.
+- **No live source snapshot is bundled.** The `SourceAdapter` interface, a ClinicalTrials.gov API v2 adapter and snapshot capture/replay are implemented and unit-tested against success and every failure mode, but the build environment blocks all non-registry egress, so no real response could be retrieved — and one was not fabricated. See _Capturing a live source snapshot_ below to complete it on a machine with internet access.
 - **Review state is per browser.** No database, no authentication, no shared workspace. Two people reviewing the demo do not see each other's actions.
 - **The reviewer identity is a fixed demo string.** A real deployment would take it from an authenticated session.
 - **Export is a print stylesheet**, not a PDF pipeline. `Decision memo` opens the browser print dialog; the app is suppressed and the memo prints alone.

@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Activity } from "lucide-react";
 
-/** Fixed disclaimer text, used in the header, footer and print memo. */
+/** Short chrome label. The full statement stays in the footer and the memo. */
+export const PROTOTYPE_LABEL = "Independent prototype";
+/** Fixed disclaimer text, used in the footer, landing page and print memo. */
 export const PROTOTYPE_DISCLAIMER = "Independent prototype prepared for a Convexia conversation.";
 export const ILLUSTRATIVE_DISCLAIMER =
   "The demonstration asset and all of its evidence are illustrative and synthetic. Nothing here is a real drug, study, trial or publication.";
@@ -27,8 +29,8 @@ export function AppHeader({ children }: { children?: ReactNode }) {
         <Link href="/" className="shrink-0 rounded-sm">
           <Wordmark tone="light" />
         </Link>
-        <p className="hidden min-w-0 border-l border-chrome-soft pl-4 text-[11px] leading-tight text-chrome-ink-muted lg:block">
-          {PROTOTYPE_DISCLAIMER}
+        <p className="min-w-0 border-l border-chrome-soft pl-4 text-[11px] leading-tight text-chrome-ink-muted">
+          {PROTOTYPE_LABEL}
         </p>
         <div className="ml-auto flex items-center gap-2">{children}</div>
       </div>

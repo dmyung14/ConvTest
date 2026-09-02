@@ -347,3 +347,44 @@ no page errors at any width
 | M8 — Quality pass and handoff                 | ✅                                                                      |
 
 **Remaining limitations** (all documented in the README): the default asset is synthetic; no live source snapshot is bundled because this environment blocks non-registry egress and fabricating one was not acceptable; review state is per browser with no auth or database; export is a print stylesheet rather than a PDF pipeline; the optional model-classification route from §8 of the brief was deliberately not built, as it is explicitly not a milestone blocker.
+
+---
+
+## Post-handoff revision — M7 completion path, header label, dev indicator
+
+Requested after the first handoff, once the project was running on the user's own machine.
+
+### 1. M7's remaining task made completable
+
+The one outstanding item was the brief's task 4, "cache a successful response snapshot locally". It still cannot be done from this build environment — a re-test confirmed `clinicaltrials.gov:443` is still refused with `403 CONNECT` by the egress proxy, which allows package registries only. GitHub became reachable mid-session, but that grant does not extend to arbitrary hosts.
+
+Rather than leave it undone, the mechanism around it was built so that anyone with normal internet access completes it in one command:
+
+- **`.env.example`** (and `!.env.example` in `.gitignore`, which previously excluded it via `.env*`). Copying it to `.env.local` enables the adapter. Next.js loads `.env.local` automatically, which removes the real usability problem: the flag previously had to be exported in the _same_ terminal that started the server, and setting it anywhere else silently produced `reason: "disabled"`.
+- **`src/sources/snapshot.ts`** — a snapshot schema, `SnapshotAdapter` for replay, and `parseSnapshot()`, which re-validates every record against the domain schema and additionally **rejects any record claiming `isIllustrative: false` without a `retrievedAt` stamp**. That guard exists so a snapshot cannot be hand-written into existence: a "verified" source must carry proof of when it was fetched.
+- **`scripts/capture-snapshot.mjs`** (`npm run capture:snapshot -- "<term>"`) — captures through the real `/api/sources` route rather than reimplementing the adapter, so a successful capture proves the entire chain against the live API. On failure it names the reason and the fix, and flags `invalid_response` as a genuine finding rather than a user error.
+- **`/api/sources` now falls back to a cached snapshot** when the live lookup is unavailable, and when neither is available it reports which snapshot slug it looked for, which are available, and the exact command to create one.
+- `src/sources/snapshots/README.md` records that these files are generated only and must never be edited.
+
+**Verification**
+
+| Check                                 | Result                                                                                                               |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                            | pass — 116 tests (7 new for the snapshot layer)                                                                      |
+| Live-adapter egress re-test           | still `403 CONNECT` — documented, not worked around                                                                  |
+| Route with no snapshot, live disabled | `503` naming the slug sought, the empty `available` list and the capture command                                     |
+| Route replaying a snapshot            | `ok: true`, `adapter: "clinicaltrials-gov-v2 (cached snapshot)"`, with a `note` that the live lookup was unavailable |
+
+The replay path was exercised with a throwaway fixture that was deleted immediately and never committed; `src/sources/snapshots/` still contains only its README.
+
+**Still outstanding:** no real snapshot is committed, so the adapter's schema remains unverified against a live payload. Only someone with network access can close that, via `npm run capture:snapshot`.
+
+### 2. Header label shortened
+
+The header chip now reads **"Independent prototype"** (`PROTOTYPE_LABEL`). The full sentence, "Independent prototype prepared for a Convexia conversation.", is unchanged in the footer, on the landing page and in the print memo, where the non-affiliation statement does its real work. Because the short label no longer risks crowding the mobile layout, the `hidden … lg:block` rule was dropped and it is now visible at every width — re-verified for horizontal overflow at 1600/1280/834/390/360 px.
+
+### 3. Next.js dev indicator removed
+
+The floating "N" badge at the bottom-left was the Next.js dev-mode indicator, not application UI. Disabled with `devIndicators: false` in `next.config.ts`, per the bundled Next 16 reference (`appIsrStatus`, `buildActivity` and `buildActivityPosition` were removed in v16; the whole indicator is switched off with `false`). It only ever rendered under `next dev`, never in a production build, but it sat over the workspace during a live demo. Compile and runtime errors are still surfaced. Confirmed absent in a real `next dev` session.
+
+**Full re-verification after all three changes:** `npm run verify` pass (format, lint, typecheck, 116 unit tests, build) · `npm run test:e2e` 10/10 pass · no horizontal overflow at any width · screenshots regenerated.

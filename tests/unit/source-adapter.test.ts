@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ClinicalTrialsAdapter, normalizeStudy } from "@/sources/clinicaltrials";
 import { evidenceItemSchema } from "@/domain/schema";
+import { SnapshotAdapter, parseSnapshot, snapshotSlug } from "@/sources/snapshot";
 import { getDemoAsset } from "@/data";
 
 const ENV_KEY = "DECISIONTRACE_ENABLE_LIVE_SOURCES";
@@ -156,5 +157,80 @@ describe("the fixture stays the default path", () => {
     expect(items.length).toBeGreaterThan(0);
     expect(items.every((item) => item.isIllustrative)).toBe(true);
     expect(items.every((item) => item.retrievedAt === undefined)).toBe(true);
+  });
+});
+
+describe("SnapshotAdapter", () => {
+  const capturedItem = {
+    id: "ctgov-NCT01234567",
+    title: "A registered study",
+    sourceType: "Clinical trial registration",
+    publisher: "ClinicalTrials.gov · lead sponsor: A sponsor",
+    publishedAt: "2021-04",
+    url: "https://clinicaltrials.gov/study/NCT01234567",
+    summary: "Registry record NCT01234567. Overall status: COMPLETED.",
+    relationship: "context" as const,
+    isIllustrative: false,
+    retrievedAt: "2026-09-02T10:00:00Z",
+  };
+
+  const validSnapshot = {
+    adapter: "clinicaltrials-gov-v2",
+    query: { term: "spinal muscular atrophy", limit: 5 },
+    retrievedAt: "2026-09-02T10:00:00Z",
+    items: [capturedItem],
+  };
+
+  it("derives a filesystem-safe slug from a query term", () => {
+    expect(snapshotSlug("Spinal Muscular Atrophy")).toBe("spinal-muscular-atrophy");
+    expect(snapshotSlug("  a/b  c!! ")).toBe("a-b-c");
+  });
+
+  it("replays a captured snapshot", async () => {
+    const adapter = new SnapshotAdapter(() => validSnapshot);
+    const result = await adapter.search({ term: "spinal muscular atrophy" });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.items).toHaveLength(1);
+    expect(result.retrievedAt).toBe("2026-09-02T10:00:00Z");
+    expect(result.adapter).toContain("cached snapshot");
+  });
+
+  it("reports a clear failure when no snapshot exists for the term", async () => {
+    const adapter = new SnapshotAdapter(() => undefined);
+    const result = await adapter.search({ term: "nothing cached" });
+    expect(result).toMatchObject({ ok: false, reason: "disabled" });
+    if (result.ok) return;
+    expect(result.detail).toContain("capture:snapshot");
+  });
+
+  it("rejects a snapshot whose records fail domain validation", async () => {
+    const adapter = new SnapshotAdapter(() => ({
+      ...validSnapshot,
+      items: [{ ...capturedItem, url: "not-a-url" }],
+    }));
+    const result = await adapter.search({ term: "x" });
+    expect(result).toMatchObject({ ok: false, reason: "invalid_response" });
+  });
+
+  it("rejects a record that claims to be verified without proof of retrieval", async () => {
+    // The guard against someone hand-writing a 'verified' source into a snapshot.
+    const noProof: Record<string, unknown> = { ...capturedItem };
+    delete noProof.retrievedAt;
+    expect(() => parseSnapshot({ ...validSnapshot, items: [noProof] })).toThrow(
+      /claims to be verified but has no retrievedAt/,
+    );
+  });
+
+  it("accepts an illustrative record without a retrieval stamp", () => {
+    const illustrative = { ...capturedItem, isIllustrative: true, url: undefined };
+    delete (illustrative as { retrievedAt?: string }).retrievedAt;
+    expect(() => parseSnapshot({ ...validSnapshot, items: [illustrative] })).not.toThrow();
+  });
+
+  it("rejects a malformed snapshot file outright", () => {
+    expect(() => parseSnapshot({ adapter: "x" })).toThrow();
+    expect(() => parseSnapshot(null)).toThrow();
   });
 });
