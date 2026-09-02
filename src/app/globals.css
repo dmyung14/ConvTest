@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/*
+ * DecisionTrace design tokens.
+ * Palette intent: near-black navy chrome, warm off-white canvas, deep teal accent,
+ * amber for uncertainty, red reserved for contradictions/rejections, blue-gray metadata.
+ */
+:root {
+  --dt-canvas: #f7f6f3;
+  --dt-surface: #ffffff;
+  --dt-surface-muted: #f1efea;
+  --dt-ink: #14181d;
+  --dt-ink-muted: #4d5866;
+  --dt-ink-subtle: #6b7686;
+  --dt-line: #ddd9d1;
+  --dt-line-strong: #c6c1b7;
+
+  --dt-chrome: #0e1620;
+  --dt-chrome-soft: #1a2635;
+  --dt-chrome-ink: #e8eaed;
+  --dt-chrome-ink-muted: #9aa6b4;
+
+  --dt-accent: #0f5c56;
+  --dt-accent-soft: #e2efec;
+  --dt-accent-ink: #0a423e;
+
+  --dt-amber: #8a5a08;
+  --dt-amber-soft: #fbf0dc;
+
+  --dt-red: #97231f;
+  --dt-red-soft: #fbe6e4;
+
+  --dt-slate: #465569;
+  --dt-slate-soft: #e9edf2;
+
+  --dt-focus: #0f766e;
+}
+
+@theme inline {
+  --color-canvas: var(--dt-canvas);
+  --color-surface: var(--dt-surface);
+  --color-surface-muted: var(--dt-surface-muted);
+  --color-ink: var(--dt-ink);
+  --color-ink-muted: var(--dt-ink-muted);
+  --color-ink-subtle: var(--dt-ink-subtle);
+  --color-line: var(--dt-line);
+  --color-line-strong: var(--dt-line-strong);
+  --color-chrome: var(--dt-chrome);
+  --color-chrome-soft: var(--dt-chrome-soft);
+  --color-chrome-ink: var(--dt-chrome-ink);
+  --color-chrome-ink-muted: var(--dt-chrome-ink-muted);
+  --color-accent: var(--dt-accent);
+  --color-accent-soft: var(--dt-accent-soft);
+  --color-accent-ink: var(--dt-accent-ink);
+  --color-amber: var(--dt-amber);
+  --color-amber-soft: var(--dt-amber-soft);
+  --color-danger: var(--dt-red);
+  --color-danger-soft: var(--dt-red-soft);
+  --color-slate: var(--dt-slate);
+  --color-slate-soft: var(--dt-slate-soft);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--dt-canvas);
+  color: var(--dt-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "tnum";
+}
+
+/* Visible, consistent focus ring across the app. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--dt-focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles for the decision memo. */
+@media print {
+  :root {
+    --dt-canvas: #ffffff;
+  }
+
+  body {
+    background: #ffffff;
+    font-size: 10.5pt;
+  }
+
+  .dt-no-print {
+    display: none !important;
+  }
+
+  .dt-print-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #444;
+    word-break: break-all;
+  }
+}
