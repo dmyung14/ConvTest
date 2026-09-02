@@ -241,13 +241,58 @@ The first print run logged React error #418 — a hydration mismatch, because th
 
 **Verification**
 
-| Command | Result |
-| --- | --- |
-| `npm test` | pass — 97 tests across 6 files (14 new) |
-| `npm run lint` | pass |
-| `npm run typecheck` | pass |
-| `npm run build` | pass |
-| Live print/screen check (18 assertions) | all pass, no page errors |
-| Rendered A4 memo | legible, six sections, no clipped content or horizontal overflow |
+| Command                                 | Result                                                           |
+| --------------------------------------- | ---------------------------------------------------------------- |
+| `npm test`                              | pass — 97 tests across 6 files (14 new)                          |
+| `npm run lint`                          | pass                                                             |
+| `npm run typecheck`                     | pass                                                             |
+| `npm run build`                         | pass                                                             |
+| Live print/screen check (18 assertions) | all pass, no page errors                                         |
+| Rendered A4 memo                        | legible, six sections, no clipped content or horizontal overflow |
 
 **Next milestone:** M7 — the optional public-data adapter (attempted only now that M0–M6 pass).
+
+---
+
+## Milestone 7 — Optional public-data adapter ✅ (partial, with a documented limitation)
+
+**Environment finding, established first**
+
+Both candidate public APIs are unreachable from this build environment. Its egress proxy allows package registries only and returns `403 CONNECT tunnel failed` for everything else:
+
+```
+clinicaltrials.gov:443           → connect_rejected (organization policy)
+eutils.ncbi.nlm.nih.gov:443      → connect_rejected (organization policy)
+```
+
+So the milestone's caching step could not be completed honestly. **No response snapshot was cached, because none could be legitimately retrieved — and inventing one would be exactly the fabrication the brief forbids.** Everything that does not depend on live egress was built and verified.
+
+**Completed**
+
+- `src/sources/types.ts` — the `SourceAdapter` interface, a `SourceQuery` (term, limit, abort signal) and a discriminated `SourceResult`. The contract is deliberately narrow: an adapter returns records it actually retrieved and validated, or it fails. It may never invent a record, and may never set `isIllustrative: false` unless the record was fetched from the named public API, passed schema validation, and has a canonical URL.
+- `src/sources/clinicaltrials.ts` — one adapter for ClinicalTrials.gov API v2 (public, key-free). Requests only the fields it needs, validates the response against a Zod schema of the documented v2 shape, then **re-validates each normalized record against the domain `evidenceItemSchema`**. A record that fails is dropped, never patched into shape. `fetch` is injected so the adapter is testable without egress. An 8-second `AbortSignal.timeout` means a slow public API cannot hang a request.
+- **Registry records are typed as `context`, never as support.** A registration proves a study was registered and what it claims to measure — not that it produced a result — and the generated summary says so in as many words. Missing fields become an explicit "not stated" rather than a plausible guess.
+- `src/app/api/sources/route.ts` — server-side only, so no third-party host or header reaches the browser. Validates its query with Zod, returns 400 for a bad request, 503 when the adapter is disabled and 502 for an upstream failure, each with a plain-language reason.
+- Disabled by default: the adapter is off unless `DECISIONTRACE_ENABLE_LIVE_SOURCES=true`, so the demo never depends on an outbound request and a sandbox with no egress does not present a broken control. No API key or secret is involved anywhere.
+
+**Verification**
+
+| Check | Result |
+| --- | --- |
+| `npm test` | pass — 109 tests across 7 files (12 new) |
+| `npm run lint` / `typecheck` / `build` | pass |
+| `GET /api/sources?term=neuromuscular` (default) | `503` — `{"reason":"disabled", …}` with a plain explanation |
+| `GET /api/sources?term=a` | `400` — `invalid_request`, "expected string to have >=2 characters" |
+| `GET /api/sources?term=neuromuscular` **with live sources enabled against real blocked egress** | `502` — `{"reason":"http_error","detail":"ClinicalTrials.gov responded 403."}` |
+| Workspace during that failure | `200`, illustrative banner intact — a dead adapter cannot break the app |
+| Client HTML | contains no adapter internals, hostnames or env-var names |
+
+Adapter unit tests use an injected `fetch` to cover both directions: a valid v2 payload normalizes into a schema-valid, non-illustrative, linked, `retrievedAt`-stamped record; and network failure, HTTP error, non-JSON body, wrong-shape payload and a malformed `NCTId` each produce a typed failure rather than a fabricated or half-valid record. A final test asserts the fixture remains the default path — every fixture record is `isIllustrative` with no `retrievedAt`.
+
+**Known limitations**
+
+- **No cached live snapshot.** Blocked egress; documented above rather than faked. On a machine with normal internet access, `DECISIONTRACE_ENABLE_LIVE_SOURCES=true npm run dev` then `GET /api/sources?term=<condition>` exercises the retrieval path end to end.
+- The adapter is not wired into the workspace UI. That is deliberate: the fixture is the demonstration path, and mixing a live lookup into it would blur exactly the line this product exists to draw.
+- The optional model-classification route from §8 of the brief was not built. It is explicitly not a milestone blocker, and with the deterministic app complete the remaining time was better spent on the M8 quality pass.
+
+**Next milestone:** M8 — quality pass, Playwright smoke path, responsive checks, README and demo script.
