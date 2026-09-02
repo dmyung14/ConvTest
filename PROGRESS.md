@@ -58,12 +58,12 @@ against `convexiaevidencedemobuildbrief.md`.
 
 **Verification**
 
-| Command | Result |
-| --- | --- |
-| `npm test` | pass — 34 tests across 2 files |
-| `npm run lint` | pass |
-| `npm run typecheck` | pass |
-| `npm run build` | pass |
+| Command             | Result                         |
+| ------------------- | ------------------------------ |
+| `npm test`          | pass — 34 tests across 2 files |
+| `npm run lint`      | pass                           |
+| `npm run typecheck` | pass                           |
+| `npm run build`     | pass                           |
 
 Test coverage of note: coverage weights and rounding (including half-up boundary cases and the empty set), counter completeness, unknown ranking stability and non-mutation, and a set of scientific-safety assertions — fixture passes schema validation, every evidence item is `isIllustrative`, no `PMID`/`DOI`/`NCT`/`EudraCT`/`ISRCTN` string appears anywhere in the serialized fixture, illustrative evidence carries no URL, `missing_evidence` claims carry zero evidence while all others carry at least one, and every contradiction has at least one weakening record.
 
@@ -73,3 +73,35 @@ Test coverage of note: coverage weights and rounding (including half-up boundary
 - No UI consumes the model yet.
 
 **Next milestone:** M2 — design system tokens, application shell and the landing route.
+
+---
+
+## Milestone 2 — Design system and application shell ✅
+
+**Completed**
+
+- Design tokens (established in M0, now consumed everywhere): warm off-white canvas `#f7f6f3`, near-black navy chrome `#0e1620`, deep teal accent `#0f5c56`, amber `#8a5a08` for uncertainty, red `#97231f` reserved strictly for contradictions and rejections, blue-gray `#465569` for neutral metadata. Exposed to Tailwind v4 through `@theme inline`.
+- `src/components/ui/index.tsx` — `Badge`, `Card`/`CardHeader`, `Button`/`ButtonLink` (primary/secondary/ghost/danger), `EmptyState`, `DefinitionItem`, `Meter`. The meter renders `role="meter"` with aria values and always sits beside the number as text, so it decorates a figure rather than replacing one.
+- `src/components/layout/AppShell.tsx` — dark sticky header with the DecisionTrace wordmark, the "Independent prototype prepared for a Convexia conversation" label, a footer carrying all three disclaimers (independent prototype / illustrative data / no medical, regulatory or investment advice), and a skip-to-content link.
+- `src/components/layout/IllustrativeBanner.tsx` — the persistent "Illustrative evidence" banner, placed above the workspace rather than in a footer.
+- Landing route `/` — value proposition, "Open demonstration asset" primary action, five derived headline figures (claims, coverage, contradictions, claims with no evidence, high-impact unknowns — all computed from the fixture, none typed by hand), three benefit cards (traceability, contradiction detection, expert escalation), and the illustrative-data disclaimer. Deliberately short: the interactive demo is one click away.
+
+**Verification**
+
+| Command | Result |
+| --- | --- |
+| `npm run lint` | pass |
+| `npm run typecheck` | pass |
+| `npm run build` | pass |
+| `npm test` | pass — 34 tests |
+| Rendered screenshot at 1440×900 | clean hierarchy, no overflow |
+| Rendered screenshot at 390×844 | single column, no clipping or horizontal scroll |
+
+Screenshots were captured against `npm run start` with headless Chromium (`/opt/pw-browsers/chromium-1194`, launched with background networking disabled so the page settles offline).
+
+**Known limitations**
+
+- The header's prototype label is hidden below `lg` to protect the mobile layout; the same text remains in the footer at every width.
+- Links to `/assets/demo-asset` and `/methodology` 404 until M3 and the optional methodology route land, which shows up as two prefetch 404s in the console.
+
+**Next milestone:** M3 — the asset decision workspace: header, decision summary, domain navigation and the filterable claim matrix.
