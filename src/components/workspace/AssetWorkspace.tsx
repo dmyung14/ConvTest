@@ -6,6 +6,7 @@ import { useWorkspaceState } from "@/state/workspace-store";
 import { Card, CardHeader } from "@/components/ui";
 import { IllustrativeBanner } from "@/components/layout/IllustrativeBanner";
 import { AssetHeader } from "./AssetHeader";
+import { EvidenceDrawer } from "./EvidenceDrawer";
 import { DecisionSummary } from "./DecisionSummary";
 import {
   ClaimFilterBar,
@@ -26,8 +27,13 @@ export function AssetWorkspace({ baseAsset }: { baseAsset: Asset }) {
     [asset.claims, filters],
   );
 
+  const selectedClaim = useMemo(
+    () => asset.claims.find((claim) => claim.id === selectedClaimId) ?? null,
+    [asset.claims, selectedClaimId],
+  );
+
   const selectClaim = (claim: Claim) => {
-    setSelectedClaimId((current) => (current === claim.id ? null : claim.id));
+    setSelectedClaimId(claim.id);
   };
 
   return (
@@ -67,6 +73,12 @@ export function AssetWorkspace({ baseAsset }: { baseAsset: Asset }) {
           />
         </Card>
       </div>
+
+      <EvidenceDrawer
+        asset={asset}
+        claim={selectedClaim}
+        onClose={() => setSelectedClaimId(null)}
+      />
     </>
   );
 }
