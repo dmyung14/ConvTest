@@ -303,7 +303,7 @@ Adapter unit tests use an injected `fetch` to cover both directions: a valid v2 
 
 **Completed**
 
-- **Optional route `/methodology`** (unlocked because M0–M6 all passed): facts vs inference, the coverage formula and weights with an explicit statement of what coverage is *not*, confidence rationale as an axis independent of classification, contradiction handling, all five human-review states, and the demonstration's limitations. This also closes the last unresolved link on the landing page.
+- **Optional route `/methodology`** (unlocked because M0–M6 all passed): facts vs inference, the coverage formula and weights with an explicit statement of what coverage is _not_, confidence rationale as an axis independent of classification, contradiction handling, all five human-review states, and the demonstration's limitations. This also closes the last unresolved link on the landing page.
 - **Playwright smoke suite** (`tests/e2e/smoke.spec.ts`, 10 tests) covering the brief's required path and more: landing → asset in one click; the recommendation, coverage meter and three dominating unknowns; the full review path (filter to contradictions → open a claim → escalate with a rationale → confirm the audit event → reset); a rejection blocked until explained; drawer keyboard accessibility with Escape and focus return; the missing-evidence gap state; ranked unknowns routed to named specialists; the print memo replacing the app without claiming a validated prediction; the methodology page; and the source adapter failing safely without breaking the app.
 - **Playwright config hardened for offline use** — resolves a Chromium already present under `PLAYWRIGHT_BROWSERS_PATH` (or `CHROMIUM_PATH`) when Playwright's own download is unavailable, clears the device `channel` that would otherwise override it, and builds the app itself so `npm run test:e2e` works from a clean checkout.
 - **`README.md`** — what it demonstrates, why it matters to AI-assisted diligence, the independent-prototype and illustrative-data statements, architecture map, exact setup/test/build commands, the data model and coverage formula, limitations, and future integration possibilities.
@@ -312,12 +312,12 @@ Adapter unit tests use an injected `fetch` to cover both directions: a valid v2 
 
 **Verification**
 
-| Command | Result |
-| --- | --- |
-| `npm run verify` (`format:check` → `lint` → `typecheck` → `test` → `build`) | **pass** |
-| `npm test` | pass — 109 tests, 7 files |
-| `npm run test:e2e` | pass — 10/10 Playwright tests |
-| `npm run build` | pass — `/`, `/methodology` static; `/assets/demo-asset` SSG; `/api/sources` dynamic |
+| Command                                                                     | Result                                                                              |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `npm run verify` (`format:check` → `lint` → `typecheck` → `test` → `build`) | **pass**                                                                            |
+| `npm test`                                                                  | pass — 109 tests, 7 files                                                           |
+| `npm run test:e2e`                                                          | pass — 10/10 Playwright tests                                                       |
+| `npm run build`                                                             | pass — `/`, `/methodology` static; `/assets/demo-asset` SSG; `/api/sources` dynamic |
 
 **Responsive check** — landing, workspace, methodology and the open drawer at 1600, 1280, 834, 390 and 360 px:
 
@@ -328,22 +328,22 @@ no page errors at any width
 
 **Content sweep** — no `TODO`/`FIXME`/lorem/`Create Next App` scaffold text anywhere in `src`, `tests` or the docs; no fabricated `PMID`, `NCT`, DOI or registry identifier outside the adapter's own test fixtures; both internal links (`/`, `/methodology`) resolve; every relative link in the README exists.
 
-**Two issues found and fixed during this milestone**, both in the tests rather than the app: an ambiguous `getByText("Evidence coverage")` that matched four nodes, and an assertion that the *first* table on the page prints — it is the claim matrix, which is correctly suppressed, so the assertion now checks the memo's own table and that the matrix is hidden.
+**Two issues found and fixed during this milestone**, both in the tests rather than the app: an ambiguous `getByText("Evidence coverage")` that matched four nodes, and an assertion that the _first_ table on the page prints — it is the claim matrix, which is correctly suppressed, so the assertion now checks the memo's own table and that the matrix is hidden.
 
 ---
 
 ## Final status
 
-| Milestone | Status |
-| --- | --- |
-| M0 — Inspect and establish the project | ✅ |
-| M1 — Domain model and fixture | ✅ |
-| M2 — Design system and application shell | ✅ |
-| M3 — Asset decision workspace | ✅ |
-| M4 — Evidence inspection | ✅ |
-| M5 — Expert review and auditability | ✅ |
-| M6 — Decision-critical unknowns and memo view | ✅ |
-| M7 — Optional public-data adapter | ✅ partial — adapter built and tested; no live snapshot, egress blocked |
-| M8 — Quality pass and handoff | ✅ |
+| Milestone                                     | Status                                                                  |
+| --------------------------------------------- | ----------------------------------------------------------------------- |
+| M0 — Inspect and establish the project        | ✅                                                                      |
+| M1 — Domain model and fixture                 | ✅                                                                      |
+| M2 — Design system and application shell      | ✅                                                                      |
+| M3 — Asset decision workspace                 | ✅                                                                      |
+| M4 — Evidence inspection                      | ✅                                                                      |
+| M5 — Expert review and auditability           | ✅                                                                      |
+| M6 — Decision-critical unknowns and memo view | ✅                                                                      |
+| M7 — Optional public-data adapter             | ✅ partial — adapter built and tested; no live snapshot, egress blocked |
+| M8 — Quality pass and handoff                 | ✅                                                                      |
 
 **Remaining limitations** (all documented in the README): the default asset is synthetic; no live source snapshot is bundled because this environment blocks non-registry egress and fabricating one was not acceptable; review state is per browser with no auth or database; export is a print stylesheet rather than a PDF pipeline; the optional model-classification route from §8 of the brief was deliberately not built, as it is explicitly not a milestone blocker.
