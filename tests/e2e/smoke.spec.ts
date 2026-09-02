@@ -22,9 +22,7 @@ test("landing page reaches the demonstration asset in one click", async ({ page 
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "decision record an expert can challenge",
   );
-  await expect(
-    page.getByText("Independent prototype prepared for a Convexia conversation.").first(),
-  ).toBeVisible();
+  await expect(page.getByText("Independent prototype.").first()).toBeVisible();
 
   await page.getByRole("link", { name: /Open demonstration asset/ }).click();
   await expect(page).toHaveURL(/\/assets\/demo-asset$/);

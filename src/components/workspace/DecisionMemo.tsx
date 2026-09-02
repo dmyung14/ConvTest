@@ -13,7 +13,7 @@ import {
   REVIEW_STATUS_ORDER,
   formatTimestamp,
 } from "@/domain/labels";
-import { ILLUSTRATIVE_DISCLAIMER, PROTOTYPE_DISCLAIMER } from "@/components/layout/AppShell";
+import { ILLUSTRATIVE_DISCLAIMER, PROTOTYPE_LABEL } from "@/components/layout/AppShell";
 
 /**
  * Print-only decision memo.
@@ -40,7 +40,7 @@ export function DecisionMemo({ asset, summary }: { asset: Asset; summary: AssetS
           {formatTimestamp(asset.updatedAt)} UTC.
           {generatedAt ? ` Memo generated ${formatTimestamp(generatedAt)} UTC.` : ""}
         </p>
-        <p className="mt-2 text-xs font-semibold">{PROTOTYPE_DISCLAIMER}</p>
+        <p className="mt-2 text-xs font-semibold">{PROTOTYPE_LABEL}.</p>
         <p className="text-xs">{ILLUSTRATIVE_DISCLAIMER}</p>
       </header>
 

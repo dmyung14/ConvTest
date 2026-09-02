@@ -6,7 +6,7 @@ import {
   AppFooter,
   AppHeader,
   MAIN_CONTENT_ID,
-  PROTOTYPE_DISCLAIMER,
+  PROTOTYPE_LABEL,
   SkipLink,
 } from "@/components/layout/AppShell";
 
@@ -112,7 +112,7 @@ export default function LandingPage() {
 
           <div className="mt-10 rounded-md border border-line bg-surface-muted px-4 py-3">
             <p className="text-xs leading-relaxed text-ink-muted">
-              <strong className="font-semibold text-ink">{PROTOTYPE_DISCLAIMER}</strong> The
+              <strong className="font-semibold text-ink">{PROTOTYPE_LABEL}.</strong> The
               demonstration asset <span className="font-medium text-ink">{asset.name}</span> and all
               of its evidence are synthetic and clearly labelled as illustrative throughout. No real
               publication, trial registration, institution or identifier is referenced, and the demo

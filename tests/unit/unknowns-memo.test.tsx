@@ -92,9 +92,7 @@ describe("DecisionMemo", () => {
 
   it("carries the prototype and illustrative-data disclaimers", () => {
     const { container } = render(<DecisionMemo asset={asset} summary={summary} />);
-    expect(
-      screen.getByText("Independent prototype prepared for a Convexia conversation."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Independent prototype.")).toBeInTheDocument();
     expect(container.textContent).toContain("illustrative and synthetic");
   });
 

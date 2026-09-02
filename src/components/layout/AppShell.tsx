@@ -2,10 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Activity } from "lucide-react";
 
-/** Short chrome label. The full statement stays in the footer and the memo. */
+/** Fixed prototype label, used in the header, footer, landing page and print memo. */
 export const PROTOTYPE_LABEL = "Independent prototype";
-/** Fixed disclaimer text, used in the footer, landing page and print memo. */
-export const PROTOTYPE_DISCLAIMER = "Independent prototype prepared for a Convexia conversation.";
 export const ILLUSTRATIVE_DISCLAIMER =
   "The demonstration asset and all of its evidence are illustrative and synthetic. Nothing here is a real drug, study, trial or publication.";
 
@@ -43,7 +41,7 @@ export function AppFooter() {
     <footer className="dt-no-print border-t border-line bg-surface">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-4 text-[11px] leading-relaxed text-ink-subtle sm:px-6">
         <p>
-          <strong className="font-semibold text-ink-muted">{PROTOTYPE_DISCLAIMER}</strong> Not
+          <strong className="font-semibold text-ink-muted">{PROTOTYPE_LABEL}.</strong> Not
           affiliated with, endorsed by, or built from any non-public information about Convexia.
         </p>
         <p>{ILLUSTRATIVE_DISCLAIMER}</p>

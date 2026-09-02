@@ -388,3 +388,15 @@ The header chip now reads **"Independent prototype"** (`PROTOTYPE_LABEL`). The f
 The floating "N" badge at the bottom-left was the Next.js dev-mode indicator, not application UI. Disabled with `devIndicators: false` in `next.config.ts`, per the bundled Next 16 reference (`appIsrStatus`, `buildActivity` and `buildActivityPosition` were removed in v16; the whole indicator is switched off with `false`). It only ever rendered under `next dev`, never in a production build, but it sat over the workspace during a live demo. Compile and runtime errors are still surfaced. Confirmed absent in a real `next dev` session.
 
 **Full re-verification after all three changes:** `npm run verify` pass (format, lint, typecheck, 116 unit tests, build) · `npm run test:e2e` 10/10 pass · no horizontal overflow at any width · screenshots regenerated.
+
+### 4. "prepared for a Convexia conversation" removed
+
+The prototype disclaimer now reads simply **"Independent prototype."** everywhere it appears: the landing page's disclaimer box, the site footer, and the print decision memo (the memo was not in the reported screenshot but carried the same sentence, and leaving it inconsistent would have been worse).
+
+`PROTOTYPE_LABEL` and `PROTOTYPE_DISCLAIMER` were collapsed into a single `PROTOTYPE_LABEL` constant, since after the change they differed only by a full stop. The sentence that follows in the footer — "Not affiliated with, endorsed by, or built from any non-public information about Convexia." — was deliberately left in place: it is the substantive non-affiliation statement, and only the framing phrase was asked to be removed.
+
+Two tests asserted the old string (one unit, one e2e) and were updated.
+
+**Verification:** format, lint, typecheck, 116 unit tests, build and 10/10 e2e all pass; 20 responsive layout checks with no overflow; screenshots regenerated. Confirmed in a browser that the phrase no longer appears anywhere on the rendered landing page, footer or print memo.
+
+Two stale-state traps surfaced during this pass, both environmental rather than code defects: a `.env.local` left behind by an earlier adapter test made the adapter appear enabled (`502` instead of the expected `503`), and Playwright's `reuseExistingServer` then reused a server that had booted while that file still existed. Removing the file and stopping the helper server restored a clean 10/10.
