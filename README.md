@@ -54,7 +54,7 @@ No API key, environment variable, database or network access is needed for the f
 
 ```bash
 npm run lint          # ESLint (flat config, next/core-web-vitals + TypeScript)
-npm run typecheck     # tsc --noEmit, strict mode
+npm run typecheck     # next typegen + tsc --noEmit, strict mode
 npm test              # Vitest unit + component tests (109 tests)
 npm run test:e2e      # Playwright smoke suite (10 tests; builds and serves automatically)
 npm run build         # production build
