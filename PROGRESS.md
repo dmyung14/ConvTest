@@ -153,7 +153,7 @@ New tests cover: each filter axis independently, conjunctive combination, an exp
 - `src/components/workspace/EvidenceDrawer.tsx` — the claim inspection view:
   - Status row (classification, confidence, review state, last reviewed) — every one rendered as text.
   - A **classification callout** at the top that states, before any source is read, whether what follows is a sourced fact, a model's reasoning, an unresolved conflict, or nothing at all.
-  - "Why this matters to the decision", then the full confidence *rationale* rather than a bare level.
+  - "Why this matters to the decision", then the full confidence _rationale_ rather than a bare level.
   - Evidence grouped with **conflicting records shown first**, then supporting, then context — a reviewer should meet the disagreement before the reassurance.
   - Each record shows title, publisher, source type, publication date, normalized summary, and its supports/weakens/context relationship.
   - Linked decision-critical unknowns, and the claim's review history.
@@ -167,16 +167,16 @@ New tests cover: each filter axis independently, conjunctive combination, an exp
 
 **Illustrative-vs-verified rule**
 
-Every illustrative record carries an amber "Illustrative record — not a real citation" badge and **no link at all**. A link and a "Verified source" badge appear only when a record has `isIllustrative: false` *and* a URL — i.e. only for something an adapter actually retrieved. A test constructs such a record and asserts the link renders with `rel="noopener noreferrer"`; another asserts the fixture's illustrative records produce zero links.
+Every illustrative record carries an amber "Illustrative record — not a real citation" badge and **no link at all**. A link and a "Verified source" badge appear only when a record has `isIllustrative: false` _and_ a URL — i.e. only for something an adapter actually retrieved. A test constructs such a record and asserts the link renders with `rel="noopener noreferrer"`; another asserts the fixture's illustrative records produce zero links.
 
 **Verification**
 
-| Command | Result |
-| --- | --- |
-| `npm test` | pass — 64 tests across 4 files (17 new for the drawer) |
-| `npm run lint` | pass |
-| `npm run typecheck` | pass |
-| `npm run build` | pass |
+| Command                                | Result                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm test`                             | pass — 64 tests across 4 files (17 new for the drawer)                                                                                                                                                                                                                                                                   |
+| `npm run lint`                         | pass                                                                                                                                                                                                                                                                                                                     |
+| `npm run typecheck`                    | pass                                                                                                                                                                                                                                                                                                                     |
+| `npm run build`                        | pass                                                                                                                                                                                                                                                                                                                     |
 | Live browser check (headless Chromium) | filter → 2 of 14 claims; drawer opens with `aria-modal="true"` and a labelled heading; focus lands inside the panel; conflicting-evidence section present; 2 illustrative badges and 0 links; **Escape closes and focus returns to the originating row**; the missing-evidence claim shows the gap panel and its wording |
 
 One issue found and resolved during verification: the first screenshots showed a see-through panel. That was the 160 ms open animation still running at capture time, not a styling bug — confirmed by re-capturing after the animation settles. A second issue was real but environmental: a stale `next-server` process kept port 3100 and served HTML referencing chunk hashes from an older build, which looked exactly like broken hydration. The local server helper now kills by process rather than by PID file.
@@ -186,3 +186,37 @@ One issue found and resolved during verification: the first screenshots showed a
 - The drawer has no review controls yet; those land in M5 through its `footer` slot.
 
 **Next milestone:** M5 — expert review actions, rationale capture, audit trail and reset.
+
+---
+
+## Milestone 5 — Expert review and auditability ✅
+
+**Completed**
+
+- `ReviewControls` (rendered in the drawer's footer slot) — the four review actions: verified, needs specialist, rejected, superseded, plus "Clear review state" for a claim already acted on. The parent keys the component by claim id so switching claims remounts it, rather than carrying a half-typed rationale across to a different claim.
+- **Graduated rationale policy.** Rejecting or superseding a claim overrides the evidence on record, so a rationale of at least 8 characters is *required* and enforced with a `role="alert"` message and `aria-invalid` on the field. Verifying or escalating follows from the evidence, so a rationale is invited but optional — an audit trail full of compulsory boilerplate is no better than an empty one. Where a reviewer does leave it blank, the audit event says so explicitly rather than inventing a reason.
+- `AuditTrail` — every ingestion, classification and review event, newest first, each with a text actor-type label (Agent / System / Human), the actor, the action, the rationale and a UTC timestamp. Human review events are appended live and name the claim they refer to.
+- `ReviewProgress` — reviewed count, percentage meter and a breakdown across all five review states, with an explicit note that review progress is tracked separately from evidence coverage because reviewing a claim does not create evidence for it.
+- Header actions — "Decision memo" (print) and "Reset demo". Reset is disabled with an explanatory tooltip when there is nothing to discard.
+- Persistence — reviewer mutations are mirrored to `localStorage` (`decisiontrace.review.v1`). Only mutations are stored, keyed by asset id and schema version; corrupt, foreign-asset or old-version payloads are ignored in favour of the pristine fixture.
+
+**Verification**
+
+| Command | Result |
+| --- | --- |
+| `npm test` | pass — 83 tests across 5 files (19 new) |
+| `npm run lint` | pass |
+| `npm run typecheck` | pass |
+| `npm run build` | pass |
+| Live browser workflow (16 assertions) | all pass |
+
+The browser run exercised the whole loop: reset disabled at start → filter to contradictions → open a claim → escalate with a rationale → claim badge and per-claim review history update (1 → 2 entries) → audit trail grows by exactly one event → progress reads 1/14 → reset becomes enabled → a rejection with no rationale is blocked with the explanatory alert → the same rejection succeeds once a reason is given → state survives a full page reload → reset restores 0/14, the original 7 audit events and the disabled button → the reset also persists across another reload. No page errors.
+
+New unit tests additionally assert that the source fixture is never mutated by a review, that coverage is unchanged by review actions, that clearing a review is itself auditable, and that stored state from a different asset or a corrupt payload falls back to the fixture.
+
+**Known limitations**
+
+- The reviewer identity is a fixed demo string ("You (diligence lead)"); a real deployment would take it from an authenticated session.
+- Review state is per-browser, so two people reviewing the same demo do not see each other's actions. Out of scope for an overnight prototype, and called out in the README limitations.
+
+**Next milestone:** M6 — the ranked decision-critical unknowns panel and the print-friendly decision memo.
